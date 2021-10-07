@@ -48,7 +48,7 @@ const char *checkNotNull(const char *value) {
 int main(int argc, char **argv) {
     // Check arguments
     if (argc < 11) {
-        std::cerr << "[ERROR] Parameters are not valid!\n";
+        std::cerr << "[ERROR] Parameters are not valid" << std::endl;
         return -1;
     }
 
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
     int rc = pthread_setaffinity_np(recv_thread.native_handle(),
                                     sizeof(cpu_set_t), &cpuset);
     if (rc != 0) {
-        std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
+        std::cerr << "Error calling pthread_setaffinity_np: " << rc << std::endl;
     }
 
     processor->sender(rateHz);
