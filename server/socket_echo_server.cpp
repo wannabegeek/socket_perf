@@ -3,6 +3,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netinet/tcp.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <cctype>
@@ -70,6 +71,12 @@ int main(int argc, char **argv) {
     if ((sock_client = accept(sock_listener, (sockaddr *) &client_addr, &client_addr_size)) < 0) {
         std::cerr << "[ERROR] Connections cannot be accepted for a reason: " << strerror(errno) << std::endl;
         return -5;
+    }
+
+    int flag = 1;
+    if (setsockopt(sock_listener, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(int)) < 0) {
+        std::cerr << "[ERROR] Socket failed to set TCP_NODELAY: " << strerror(errno) << std::endl;
+        exit(-2);
     }
 
     std::cout << "[INFO] A connection is accepted now." << std::endl;

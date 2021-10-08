@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netinet/tcp.h>
 #include <netdb.h>
 #include <algorithm>
 #include <thread>
@@ -17,6 +18,12 @@ socket_processor::socket_processor(const char *host, const short port, const lon
     // Check If the socket is created
     if (sock_fd < 0) {
         std::cerr << "[ERROR] Socket cannot be created: " << strerror(errno) << std::endl;
+        exit(-2);
+    }
+
+    int flag = 1;
+    if (setsockopt(sock_fd, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(int)) < 0) {
+        std::cerr << "[ERROR] Socket failed to set TCP_NODELAY: " << strerror(errno) << std::endl;
         exit(-2);
     }
 

@@ -1,6 +1,9 @@
 #ifndef SOCKET_PERF_SOCKET_PROCESSOR_H
 #define SOCKET_PERF_SOCKET_PROCESSOR_H
 
+#include <vector>
+#include <chrono>
+
 class socket_processor {
 private:
     int sock_fd;
