@@ -10,8 +10,10 @@
 #include <algorithm>
 #include <stdexcept>
 #include <thread>
+#include <sys/mman.h>
 
 #include "socket_processor.h"
+#include "../../utils/tfthread_utils.h"
 
 // Note: Check for SIGPIPE and other socket related signals
 
@@ -58,18 +60,17 @@ int main(int argc, char **argv) {
     const long rateHz = std::strtol(checkNotNull(getCmdOption(argv, argv + argc, "-r")), nullptr, 10);
     const long payload_size = std::strtol(checkNotNull(getCmdOption(argv, argv + argc, "-s")), nullptr, 10);
 
-    socket_processor *processor = new socket_processor(host, port, iterations, payload_size);
+    auto *processor = new socket_processor(host, port, iterations, payload_size);
+
+    // avoid page faults and TLB shootdowns
+    if (mlockall(MCL_CURRENT | MCL_FUTURE) == -1) {
+        WARNING_LOG("Failed to lock memory, increase RLIMIT_MEMLOCK or run with CAP_IPC_LOC capability: " << strerror(errno));
+    }
 
     const int current_cpu = sched_getcpu();
+    tf::thread::set_affinity(pthread_self(), { current_cpu });
     std::thread recv_thread = std::thread(&socket_processor::receive, processor);
-    cpu_set_t cpuset;
-    CPU_ZERO(&cpuset);
-    CPU_SET(current_cpu+1, &cpuset);
-    int rc = pthread_setaffinity_np(recv_thread.native_handle(),
-                                    sizeof(cpu_set_t), &cpuset);
-    if (rc != 0) {
-        std::cerr << "Error calling pthread_setaffinity_np: " << rc << std::endl;
-    }
+    tf::thread::set_affinity(recv_thread, { current_cpu + 1 });
 
     processor->sender(rateHz);
 

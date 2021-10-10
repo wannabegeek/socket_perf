@@ -25,6 +25,8 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    std::cout << "Server running on thread: " << sched_getcpu() << std::endl;
+
     // Create a socket & get the file descriptor
     int sock_listener = socket(AF_INET, SOCK_STREAM, 0);
     // Check If the socket is created
@@ -35,9 +37,9 @@ int main(int argc, char **argv) {
 
     std::cout << "[INFO] Socket has been created." << std::endl;
     // Address info to bind socket
-    sockaddr_in server_addr;
+    sockaddr_in server_addr{};
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(std::atoi(argv[1]));
+    server_addr.sin_port = htons(std::strtol(argv[1], nullptr, 10));
     //server_addr.sin_addr.s_addr = INADDR_ANY;
     // OR
     inet_pton(AF_INET, "0.0.0.0", &server_addr.sin_addr);
@@ -45,7 +47,7 @@ int main(int argc, char **argv) {
     char buf[INET_ADDRSTRLEN];
 
     // Bind socket
-    if (bind(sock_listener, (sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
+    if (bind(sock_listener, reinterpret_cast<sockaddr *>(&server_addr), sizeof(server_addr)) < 0) {
         std::cerr << "[ERROR] Created socket cannot be bound to ( "
                   << inet_ntop(AF_INET, &server_addr.sin_addr, buf, INET_ADDRSTRLEN)
                   << ":" << ntohs(server_addr.sin_port) << ")" << std::endl;
@@ -68,13 +70,13 @@ int main(int argc, char **argv) {
     sockaddr_in client_addr{};
     socklen_t client_addr_size = sizeof(client_addr);
     int sock_client;
-    if ((sock_client = accept(sock_listener, (sockaddr *) &client_addr, &client_addr_size)) < 0) {
+    if ((sock_client = accept(sock_listener, reinterpret_cast<sockaddr *>(&client_addr), &client_addr_size)) < 0) {
         std::cerr << "[ERROR] Connections cannot be accepted for a reason: " << strerror(errno) << std::endl;
         return -5;
     }
 
     int flag = 1;
-    if (setsockopt(sock_listener, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(int)) < 0) {
+    if (setsockopt(sock_listener, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flag), sizeof(int)) < 0) {
         std::cerr << "[ERROR] Socket failed to set TCP_NODELAY: " << strerror(errno) << std::endl;
         exit(-2);
     }
@@ -88,7 +90,7 @@ int main(int argc, char **argv) {
     // Get name info
     char host[NI_MAXHOST];
     char svc[NI_MAXSERV];
-    if (getnameinfo((sockaddr *) &client_addr, client_addr_size,host, NI_MAXHOST,svc, NI_MAXSERV, 0) != 0) {
+    if (getnameinfo(reinterpret_cast<sockaddr *>(&client_addr), client_addr_size,host, NI_MAXHOST,svc, NI_MAXSERV, 0) != 0) {
         std::cout << "[INFO] Client: (" << inet_ntop(AF_INET, &client_addr.sin_addr, buf, INET_ADDRSTRLEN)
                   << ":" << ntohs(client_addr.sin_port) << ")" << std::endl;
     } else {
@@ -119,7 +121,7 @@ int main(int argc, char **argv) {
             long *msg_len = (long *)msg_buf;
             long *timestamp = (long *)(msg_buf + 8);
             std::chrono::nanoseconds start_time_ns(*timestamp);
-            std::chrono::time_point<std::chrono::steady_clock> start_time(start_time_ns);
+            std::chrono::time_point<std::chrono::high_resolution_clock> start_time(start_time_ns);
             std::cout << "client> len: " << *msg_len << " sending time: " << *timestamp << "\n";
 #endif
             // Resend the same message

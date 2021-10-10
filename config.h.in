@@ -1,0 +1,24 @@
+//
+// Created by tom on 10/10/2021.
+//
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#cmakedefine HAVE_PTHREAD_H 1
+
+#cmakedefine HAVE_PTHREAD_SETAFFINITY_NP 1
+#cmakedefine HAVE_PTHREAD_SETNAME_NP 1
+#cmakedefine HAVE_PTHREAD_GETNAME_NP 1
+
+#cmakedefine HAVE_EPOLL 1
+#cmakedefine HAVE_KQUEUE 1
+
+#cmakedefine HAVE_NOSIGNAL 1
+#cmakedefine HAVE_NOSIGPIPE 1
+#cmakedefine HAVE_IPTOS_LOWDELAY 1
+#cmakedefine HAVE_PIPE2 1
+
+#cmakedefine HAVE_EVENTFD 1
+
+#endif //CONFIG_H

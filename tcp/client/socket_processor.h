@@ -11,12 +11,12 @@ private:
     const long payload_size;
 
     static long percentile(std::vector<long> latencies, double percentile);
-    static void busyWaitUntil(std::chrono::time_point<std::chrono::steady_clock> time);
+    static void busyWaitUntil(std::chrono::time_point<std::chrono::high_resolution_clock> time);
 public:
-    socket_processor(const char *host, const short port, const long iterations, const long payload_size);
+    socket_processor(const char *host, short port, long iterations, long payload_size);
     ~socket_processor();
 
-    void sender(const long rateHz) const;
+    void sender(long rateHz) const;
     void receive() const;
 };
 
